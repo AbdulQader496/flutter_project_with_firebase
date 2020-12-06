@@ -1,8 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_project_with_firebase/models/brew.dart';
-import 'package:flutter_project_with_firebase/models/brew.dart';
 import 'package:flutter_project_with_firebase/models/user.dart';
-import '';
+
 
 class DatabaseService {
 
@@ -48,8 +47,8 @@ class DatabaseService {
   }
 
   //get user doc stream
-  Stream<DocumentSnapshot> get userData {
-    return brewCollection.document(uid).snapshots();
+  Stream<UserData> get userData {
+    return brewCollection.document(uid).snapshots().map(_userDataFromSnapshot);
 
   }
 

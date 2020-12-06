@@ -7,6 +7,7 @@ import 'package:flutter_project_with_firebase/services/database.dart';
 import 'package:provider/provider.dart';
 import 'brew_list.dart';
 
+
 class Home extends StatelessWidget {
 
   final AuthService _auth = AuthService();
@@ -46,7 +47,18 @@ class Home extends StatelessWidget {
             )
           ],
         ),
-        body: BrewList(),
+        body: Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/coffee_bg.png'),
+                fit: BoxFit.cover,
+              )
+            ),
+
+            child: BrewList()
+
+
+        ),
       ),
     );
   }

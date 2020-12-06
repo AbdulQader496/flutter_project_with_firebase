@@ -1,7 +1,9 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_project_with_firebase/models/user.dart';
+import 'package:flutter_project_with_firebase/services/database.dart';
 import 'package:flutter_project_with_firebase/shared/constant.dart';
+import 'package:flutter_project_with_firebase/shared/loading.dart';
+import 'package:provider/provider.dart';
 
 class SettingsForm extends StatefulWidget {
   @override
@@ -16,64 +18,90 @@ class _SettingsFormState extends State<SettingsForm> {
   //form values
   String _currentName;
   String _currentSugars;
-  String _currentStrength;
+  int _currentStrength;
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: <Widget>[
-          Text(
-            'Update your brew settings.',
-            style: TextStyle(fontSize: 18.0),
-          ),
-          SizedBox(height: 20.0,),
-          TextFormField(
-            decoration: textInputDecoration,
-            validator: (val) => val.isEmpty ? 'Please enter a name' : null,
-            onChanged: (val) => setState(() => _currentName = val),
 
-          ),
-          SizedBox(height: 20.0),
-          //dropdown
-          DropdownButtonFormField(
-            decoration: textInputDecoration,
-            value: _currentSugars ?? '0',
-            items: sugars.map((sugar){
-              return DropdownMenuItem(
-                value: sugar,
-                  child: Text('$sugar sugars'),
-              );
-          }).toList(),
-            onChanged: (val) => setState(()=> _currentSugars = val),
-          ),
-          //sliders
-          Slider(
-            value: (_currentStrength ?? 100).toDouble(),
-            activeColor: Colors.brown[_currentStrength ?? 100],
-            inactiveColor: Colors.brown[_currentStrength ?? 100],
-            min: 100.0,
-            max: 900.0,
-            divisions: 8,
-            onChanged: (val) => setState(() => _currentStrength = val.round()),
-          ),
+    final user = Provider.of<User>(context);
 
-          RaisedButton(
-            color: Colors.pink[400],
-            child: Text(
-              'Update',
-              style: TextStyle(color: Colors.white),
-            ),
-            onPressed: () async {
-              print(_currentName);
-              print(_currentStrength);
-              print(_currentSugars);
-            },
-          ),
+    return StreamBuilder<UserData>(
+      stream: DatabaseService(uid: user.uid).userData,
+      builder: (context, snapshot) {
+        if(snapshot.hasData){
+            UserData userData = snapshot.data;
 
-        ],
-      ),
+            return Form(
+              key: _formKey,
+              child: Column(
+                children: <Widget>[
+                  Text(
+                    'Update your brew settings.',
+                    style: TextStyle(fontSize: 18.0),
+                  ),
+                  SizedBox(height: 20.0,),
+                  TextFormField(
+                    initialValue: userData.name,
+                    decoration: textInputDecoration,
+                    validator: (val) => val.isEmpty ? 'Please enter a name' : null,
+                    onChanged: (val) => setState(() => _currentName = val),
+
+                  ),
+                  SizedBox(height: 20.0),
+                  //dropdown
+                  DropdownButtonFormField(
+                    decoration: textInputDecoration,
+                    value: _currentSugars ?? userData.sugars,
+                    items: sugars.map((sugar){
+                      return DropdownMenuItem(
+                        value: sugar,
+                        child: Text('$sugar sugars'),
+                      );
+                    }).toList(),
+                    onChanged: (val) => setState(()=> _currentSugars = val),
+                  ),
+                  //sliders
+                  Slider(
+                    value: (_currentStrength ?? 100).toDouble(),
+                    activeColor: Colors.brown[_currentStrength ?? userData.strength],
+                    inactiveColor: Colors.brown[_currentStrength ?? userData.strength],
+
+                    min: 100.0,
+                    max: 900.0,
+                    divisions: 8,
+                    onChanged: (val) => setState(() => _currentStrength = val.round()),
+                  ),
+
+                  RaisedButton(
+                    color: Colors.brown[400],
+                    child: Text(
+                      'Update',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    onPressed: () async {
+                      if(_formKey.currentState.validate()) {
+                        await DatabaseService(uid: user.uid).updateUserData(
+                          _currentName ?? userData.name,
+                          _currentSugars ?? userData.sugars,
+                          _currentStrength ?? userData.strength,
+                        );
+                        Navigator.pop(context);
+                      }
+
+                      print(_currentName);
+                      print(_currentStrength);
+                      print(_currentSugars);
+                    },
+                  ),
+
+                ],
+              ),
+          );
+        }else{
+           return Loading();
+        }
+
+      }
     );
   }
 }
